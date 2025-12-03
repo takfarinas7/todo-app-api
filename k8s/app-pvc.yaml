@@ -1,7 +1,8 @@
+# app-pvc.yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mariadb-pvc
+  name: app-pvc
   namespace: etudiant23-ns # VOTRE NAMESPACE UNIQUE
 spec:
   accessModes:

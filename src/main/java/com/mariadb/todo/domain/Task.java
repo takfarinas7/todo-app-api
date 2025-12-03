@@ -1,6 +1,5 @@
 package com.mariadb.todo.domain;
 
-// 🚨 CORRECTION : Remplacer javax.persistence par jakarta.persistence
 import jakarta.persistence.*;
 
 import lombok.Data;

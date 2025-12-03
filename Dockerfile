@@ -1,17 +1,27 @@
 # ----------------------------------------------------------------------------------
-# ÉTAPE 1: DÉPLOIEMENT DU JAR PRÉ-COMPILÉ
-# On utilise une image JRE simple. On n'a plus besoin de Maven ici.
+# UTILISATION DU LISTING 1 ADAPTÉ
+# ----------------------------------------------------------------------------------
+# Utiliser une image de base pour le build Maven
+FROM maven:3.8.7-jdk-21 AS build 
+WORKDIR /app 
+
+# Correction: Copie tout et compile
+COPY . . 
+# vos commandes de build ici
+RUN mvn clean package -DskipTests
+# ----------------------------------------------------------------------------------
+
+
+# Image finale pour l’excution
 FROM eclipse-temurin:21-jre-alpine
-# Crée le répertoire où la DB sera stockée (pour K8s PVC)
+
+# Déclare le point de montage pour la persistance H2
 RUN mkdir -p /data
 VOLUME /data 
-
 WORKDIR /app
 EXPOSE 8080
 
-# 🚨 C'EST LA CLÉ : On suppose qu'un fichier 'app.jar' a été créé avant le build Docker
-# Le fichier 'app.jar' sera créé par l'étape Maven dans le build.yml
-COPY target/todo-0.0.1-SNAPSHOT.jar app.jar 
-
+# vos commandes d’execution ici
+COPY --from=build /app/target/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
 # ----------------------------------------------------------------------------------
