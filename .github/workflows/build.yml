@@ -17,7 +17,7 @@ jobs:
       - name: 1. Checkout Code
         uses: actions/checkout@v4
       
-      # 🚨 ÉTAPE CLÉ 1 : Compilation Maven sur le Runner Ubuntu (utilise Java 21)
+      # 🚨 ÉTAPE CLÉ 1 : Compilation Maven (utilise Java 21 stable)
       - name: 2. Setup Java 21 and Compile Project
         uses: actions/setup-java@v4
         with:
@@ -30,16 +30,11 @@ jobs:
         run: mvn clean package -DskipTests
         
       # 🚨 ÉTAPE CLÉ 2 : Build Docker (utilise le JAR fraîchement compilé)
-      - name: 4. Build Docker Image
+      - name: 4. Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: . 
           push: true
-          # On garde le push ici, mais l'action Build-Push est plus stable.
           tags: |
             ${{ env.GHCR_IMAGE }}:${{ github.sha }}
             ${{ env.GHCR_IMAGE }}:latest
-          
-      - name: 5. Final Push Verification
-        # Cette étape n'est nécessaire que si l'étape 4 n'a pas inclus le login/push (ce qu'elle fait normalement)
-        run: echo "Image pushed successfully with tag: ${{ github.sha }}"
