@@ -1,39 +1,34 @@
 # ----------------------------------------------------------------------------------
-# ÉTAPE 1: BUILD (COMPILATION)
-# Utilise l'image fournie par l'énoncé pour compiler le code Java avec Maven.
-FROM maven:3.8.7-jdk-17 AS build
+# ÉTAPE 1: ÉTAPE DE BUILD (COMPILATION DE L'APPLICATION AVEC MAVEN)
+# Passage à JDK 25 pour le build (Phase 3)
+FROM maven:3.8.7-jdk-25 AS build
 
-# Crée le répertoire de travail
-WORKDIR /app
+# CECI EST CRUCIAL : Définir le répertoire de travail
+WORKDIR /app 
 
-# Copie le pom.xml pour gérer les dépendances Maven
-COPY pom.xml .
-RUN mvn dependency:go-offline
+# SOLUTION CORRIGÉE : Copie tout en une fois et compile (plus robuste en CI/CD)
+COPY . . 
 
-# Copie le code source de l'application
-COPY src ./src
-
-# Compile le code et crée le fichier JAR final dans le dossier target/
+# Compile et package l'application dans un fichier JAR.
 RUN mvn clean package -DskipTests
 # ----------------------------------------------------------------------------------
 
 
 # ----------------------------------------------------------------------------------
-# ÉTAPE 2: RUN (EXÉCUTION)
-# Utilise une image JRE plus petite et plus légère pour lancer l'application.
-FROM eclipse-temurin:17-jre-alpine
+# ÉTAPE 2: ÉTAPE FINALE (EXÉCUTION DE L'APPLICATION)
+# Passage à JRE 25 pour l'exécution (Phase 3)
+FROM eclipse-temurin:25-jre-alpine
 
-# Crée et déclare le répertoire /data pour le PVC Kubernetes
-# Ceci est essentiel pour la Phase 2 du laboratoire.
+# Déclare le point de montage pour le volume persistant (même si nous utilisons MariaDB externe, c'est une bonne pratique)
 RUN mkdir -p /data
-VOLUME /data
+VOLUME /data 
 
-# Définit le port sur lequel l'application écoute
+WORKDIR /app
+
 EXPOSE 8080
 
-# Copie le fichier JAR compilé depuis l'étape 'build'
+# Copie le fichier JAR compilé depuis l'étape de 'build'
 COPY --from=build /app/target/*.jar app.jar
 
-# Définit le point d'entrée pour l'exécution du JAR
 ENTRYPOINT ["java", "-jar", "app.jar"]
 # ----------------------------------------------------------------------------------
