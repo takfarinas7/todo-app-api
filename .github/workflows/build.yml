@@ -17,16 +17,20 @@ jobs:
       - name: 1. Checkout Code
         uses: actions/checkout@v4
       
-      - name: 2. Setup Java 21 and Maven
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21' 
-          distribution: 'temurin'
-          cache: maven
-      
-      - name: 3. Compile Project with Maven
-        run: mvn clean package -DskipTests 
-      
+      # 🚨 ÉTAPE RETIRÉE : L'installation de Java n'est plus nécessaire. Le Dockerfile s'en charge.
+      # 🚨 ÉTAPE RETIRÉE : La compilation Maven est gérée DANS le Dockerfile.
+
+      - name: 3. Compile and Build Docker Image (Combined)
+        # On exécute la compilation Maven ET le build Docker en une seule étape sécurisée.
+        run: |
+          # 1. Compilation Maven (directement sur le runner)
+          # Nous allons relancer la compilation Maven sur le runner pour vérifier la validité du pom.xml
+          mvn clean package -DskipTests
+          
+          # 2. Build de l'image Docker (qui contient la compilation)
+          docker build -t ${{ env.GHCR_IMAGE }}:${{ github.sha }} .
+          docker build -t ${{ env.GHCR_IMAGE }}:latest .
+
       - name: 4. Docker Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -34,11 +38,8 @@ jobs:
           username: ${{ github.actor }} 
           password: ${{ secrets.GITHUB_TOKEN }} 
           
-      - name: 5. Build and Push Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: . 
-          push: true
-          tags: |
-            ${{ env.GHCR_IMAGE }}:${{ github.sha }}
-            ${{ env.GHCR_IMAGE }}:latest
+      - name: 5. Push Docker Images
+        # On utilise une commande simple au lieu de l'action compliquée.
+        run: |
+          docker push ${{ env.GHCR_IMAGE }}:${{ github.sha }}
+          docker push ${{ env.GHCR_IMAGE }}:latest
