@@ -11,23 +11,20 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      IMAGE_NAME: todo-app-api # Le nom de votre dépôt
-      # Utilisation directe du nom d'utilisateur et du nom de l'image (le nom de votre dépôt)
       GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/todo-app-api
 
     steps:
       - name: 1. Checkout Code
         uses: actions/checkout@v4
       
-      - name: 2. Setup Java 17 and Maven
+      - name: 2. Setup Java 21 and Maven
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21' 
           distribution: 'temurin'
           cache: maven
       
       - name: 3. Compile Project with Maven
-        # Cette commande suppose que le pom.xml est à la racine de votre dépôt Git
         run: mvn clean package -DskipTests 
       
       - name: 4. Docker Login to GHCR
@@ -42,7 +39,6 @@ jobs:
         with:
           context: . 
           push: true
-          # Applique le tag du hash de commit et le tag 'latest'
           tags: |
             ${{ env.GHCR_IMAGE }}:${{ github.sha }}
             ${{ env.GHCR_IMAGE }}:latest
