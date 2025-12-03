@@ -1,0 +1,57 @@
+name: Build & Push Todo App API to GHCR
+
+# Déclenche le workflow à chaque fois qu'un push est fait sur la branche main
+on:
+  push:
+    branches:
+      - main
+  # Permet de lancer le workflow manuellement
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    # Utilise un runner Ubuntu pour exécuter les étapes
+    runs-on: ubuntu-latest
+
+    # Définit les variables pour le nom de l'image et l'utilisateur
+    env:
+      IMAGE_REPO: todo-app-api
+      GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_REPO }}
+
+    steps:
+      - name: 1. Checkout Code
+        uses: actions/checkout@v4
+
+      # --------------------------------------------------------
+      # ÉTAPE 2: COMPILATION MAVEN (Listing 2 - tape de compilation)
+      - name: 2. Setup Java 17 and Maven
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven # Utilise le cache Maven pour accélérer les builds
+
+      - name: 3. Compile Project with Maven
+        run: mvn clean package -DskipTests
+        # Le Dockerfile va chercher ce JAR compilé à l'étape suivante
+
+      # --------------------------------------------------------
+      # ÉTAPE 3: AUTHENTIFICATION ET PUSH (Listing 2 - tape d’authentification et de Push Docker)
+      - name: 4. Docker Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }} # Nom d'utilisateur GitHub
+          # Utilise le jeton intégré de GitHub pour l'authentification
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # --------------------------------------------------------
+      # ÉTAPE 4: BUILD ET PUSH DOCKER (Listing 2 - tape de Build Docker)
+      - name: 5. Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: . # Indique de chercher le Dockerfile dans le répertoire courant (la racine du repo)
+          push: true # Indique de pousser l'image
+          tags: | # Définit les tags à appliquer à l'image
+            ${{ env.GHCR_IMAGE }}:${{ github.sha }} # Tag complet (utilise le hash de commit)
+            ${{ env.GHCR_IMAGE }}:latest # Tag 'latest'
