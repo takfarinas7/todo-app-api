@@ -1,5 +1,4 @@
-name: Build & Push Todo App API to GHCR
-
+name: Build & Push Todo App API to GHCR # Final check
 on:
   push:
     branches:
