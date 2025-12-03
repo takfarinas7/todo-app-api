@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb-db
+  namespace: etudiant23-ns # VOTRE NAMESPACE UNIQUE
+  labels:
+    app: mariadb-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb-db
+  template:
+    metadata:
+      labels:
+        app: mariadb-db
+    spec:
+      volumes:
+        - name: mariadb-storage
+          persistentVolumeClaim:
+            claimName: mariadb-pvc
+      containers:
+        - name: mariadb
+          image: mariadb:10.6
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: DB_PASSWORD
+            - name: MARIADB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: DB_USERNAME
+            - name: MARIADB_DATABASE
+              value: todo
+          volumeMounts:
+            - name: mariadb-storage
+              mountPath: /var/lib/mysql
