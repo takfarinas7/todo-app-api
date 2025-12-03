@@ -1,15 +1,3 @@
-name: Build & Push Todo App API to GHCR
-
-on:
-push:
-branches:
-- main
-workflow_dispatch:
-
-jobs:
-build-and-push:
-runs-on: ubuntu-latest
-
 env:
   GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/todo-app-api
 
@@ -17,7 +5,7 @@ steps:
   - name: 1. Checkout Code
     uses: actions/checkout@v4
   
-  # Setup Java pour la compilation
+  # Setup Java pour la compilation Maven
   - name: 2. Setup Java 21 and Compile Project
     uses: actions/setup-java@v4
     with:
@@ -29,7 +17,7 @@ steps:
     run: mvn clean package -DskipTests
     
   # -------------------------------------------------------------------------
-  # ÉTAPES DOCKER CRITIQUES AJOUTÉES ICI
+  # ÉTAPES DOCKER CRITIQUES POUR L'AUTHENTIFICATION ET LE CACHE
   # -------------------------------------------------------------------------
   
   - name: 4. Setup Docker Buildx
