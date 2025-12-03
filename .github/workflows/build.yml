@@ -17,7 +17,7 @@ steps:
   - name: 1. Checkout Code
     uses: actions/checkout@v4
   
-  # Setup Java pour la compilation Maven
+  # Setup Java pour la compilation
   - name: 2. Setup Java 21 and Compile Project
     uses: actions/setup-java@v4
     with:
