@@ -1,7 +1,6 @@
 # ----------------------------------------------------------------------------------
 # ÉTAPE 1: ÉTAPE DE BUILD (COMPILATION DE L'APPLICATION AVEC MAVEN)
-FROM maven:3.8.7-jdk-21 AS build
-
+FROM maven:3-openjdk-17 AS build
 WORKDIR /app 
 COPY . . 
 RUN mvn clean package -DskipTests
@@ -10,7 +9,7 @@ RUN mvn clean package -DskipTests
 
 # ----------------------------------------------------------------------------------
 # ÉTAPE 2: ÉTAPE FINALE (EXÉCUTION DE L'APPLICATION)
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:17-jre-alpine
 
 RUN mkdir -p /data
 VOLUME /data 
