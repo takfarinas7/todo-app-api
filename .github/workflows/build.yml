@@ -1,47 +1,59 @@
-env:
-  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/todo-app-api
+name: Build & Push Todo App API
 
-steps:
-  - name: 1. Checkout Code
-    uses: actions/checkout@v4
-  
-  # Setup Java pour la compilation Maven
-  - name: 2. Setup Java 21 and Compile Project
-    uses: actions/setup-java@v4
-    with:
-      java-version: '21'
-      distribution: 'temurin'
-      cache: maven
-      
-  - name: 3. Compile Project with Maven
-    run: mvn clean package -DskipTests
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
     
-  # -------------------------------------------------------------------------
-  # ÉTAPES DOCKER CRITIQUES POUR L'AUTHENTIFICATION ET LE CACHE
-  # -------------------------------------------------------------------------
-  
-  - name: 4. Setup Docker Buildx
-    # Nécessaire pour les fonctionnalités de build avancées et le cache
-    uses: docker/setup-buildx-action@v3
+    env:
+      GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/todo-app-api
 
-  - name: 5. Log in to GHCR
-    # Connexion au registre GitHub (GHCR) en utilisant le jeton standard de l'Action
-    uses: docker/login-action@v3
-    with:
-      registry: ghcr.io
-      username: ${{ github.repository_owner }}
-      password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: 1. Checkout Code
+        uses: actions/checkout@v4
+      
+      # Setup Java pour la compilation Maven
+      - name: 2. Setup Java 21 and Compile Project
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+          
+      - name: 3. Compile Project with Maven
+        run: mvn clean package -DskipTests
+        
+      # -------------------------------------------------------------------------
+      # ÉTAPES DOCKER CRITIQUES POUR L'AUTHENTIFICATION ET LE CACHE
+      # -------------------------------------------------------------------------
+      
+      - name: 4. Setup Docker Buildx
+        # Nécessaire pour les fonctionnalités de build avancées et le cache
+        uses: docker/setup-buildx-action@v3
 
-  - name: 6. Build and Push Docker Image
-    uses: docker/build-push-action@v5
-    with:
-      context: . 
-      push: true
-      tags: |
-        ${{ env.GHCR_IMAGE }}:${{ github.sha }}
-        ${{ env.GHCR_IMAGE }}:latest
-      no-cache: true 
-      # Utilisation du cache GHA pour les couches de base (si possible)
-      cache-from: type=gha,scope=build 
-      # Sauvegarde du cache du build dans GHA (pour les builds suivants)
-      cache-to: type=gha,scope=build,mode=max
+      - name: 5. Log in to GHCR
+        # Connexion au registre GitHub (GHCR) en utilisant le jeton standard de l'Action
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 6. Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: . 
+          push: true
+          tags: |
+            ${{ env.GHCR_IMAGE }}:${{ github.sha }}
+            ${{ env.GHCR_IMAGE }}:latest
+          no-cache: true 
+          # Utilisation du cache GHA pour les couches de base (si possible)
+          cache-from: type=gha,scope=build 
+          # Sauvegarde du cache du build dans GHA (pour les builds suivants)
+          cache-to: type=gha,scope=build,mode=max
