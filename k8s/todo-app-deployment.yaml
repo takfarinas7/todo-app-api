@@ -1,4 +1,3 @@
-# todo-app-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -18,14 +17,14 @@ spec:
     spec:
       containers:
         - name: api
+          # 🚨 REMPLACEZ CE HASH par le hash du commit qui va réussir
           image: ghcr.io/takfarinas7/todo-app-api:<HASH_DU_DERNIER_COMMIT_RÉUSSI> 
           ports:
             - containerPort: 8080
-          # 🚨 La section 'env' du Listing 6 est retirée car H2 ne nécessite pas de Secret
           volumeMounts:
             - name: data-storage
-              mountPath: /data # Chemin de stockage de la base de donnes (Listing 6)
+              mountPath: /data 
       volumes:
         - name: data-storage
           persistentVolumeClaim:
-            claimName: app-pvc # claimName (Listing 6)
+            claimName: app-pvc

@@ -12,33 +12,30 @@ jobs:
     
     env:
       GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/todo-app-api
-      # Utilisez le GITHUB_TOKEN standard, le plus sécurisé.
-      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
     steps:
       - name: 1. Checkout Code
         uses: actions/checkout@v4
       
-      # 🚨 UTILISATION DES COMMANDES DE BUILD DU LISTING 2
-      - name: 2. Compilation Maven (Listing 2)
+      # Setup Java pour la compilation Maven
+      - name: 2. Setup Java 21 and Compile Project
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
-      - run: mvn clean package -DskipTests # Listing 2: tape de compilation
-
-      # 🚨 UTILISATION DES COMMANDES DOCKER DU LISTING 2 (ADAPTÉES)
-      - name: 3. Build Docker & Login/Push
-        run: |
-          TAG=$(git rev-parse --short HEAD)
-          IMAGE=${{ env.GHCR_IMAGE }}:$TAG
-          
-          # Login Docker (Listing 2: tape d’authentification)
-          echo ${{ env.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          
-          # Build Docker (Listing 2: tape de Build Docker)
-          docker build -t $IMAGE .
-          
-          # Push Docker (Listing 2: tape de Push Docker)
-          docker push $IMAGE
+      
+      - name: 3. Compile Project with Maven
+        run: mvn clean package -DskipTests
+        
+      # 🚨 Utilisation des options no-cache et cache-from pour forcer un build propre
+      - name: 4. Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: . 
+          push: true
+          tags: |
+            ${{ env.GHCR_IMAGE }}:${{ github.sha }}
+            ${{ env.GHCR_IMAGE }}:latest
+          no-cache: true 
+          cache-from: type=gha,scope=build
