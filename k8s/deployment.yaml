@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-app-deployment
+  labels:
+    app: todo-api
+spec:
+  replicas: 2 # 2 réplicas demandés par le professeur
+  selector:
+    matchLabels:
+      app: todo-api
+  template:
+    metadata:
+      labels:
+        app: todo-api
+    spec:
+      containers:
+      - name: api
+        # REMPLACER cette ligne par votre utilisateur GHCR et le tag de votre choix
+        image: ghcr.io/takfarinas7/todo-app-api:latest 
+        ports:
+        - containerPort: 8080 # Le port d'écoute de l'application Java/Spring Boot
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret # Nom de la ressource Secret
+              key: DB_PASSWORD # Clé dans la section data du Secret
+        volumeMounts:
+        - name: data-storage
+          mountPath: /data # Chemin de stockage dans le conteneur (pour la DB embarquée)
+      volumes:
+      - name: data-storage
+        persistentVolumeClaim:
+          claimName: app-pvc # Nom de la PVC créée ci-dessus
